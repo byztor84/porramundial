@@ -65,10 +65,10 @@ export default function RegisterPage() {
           <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🏆</div>
           <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#fff', marginBottom: '1rem' }}>¡Registro completado!</h2>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.1rem', marginBottom: '2.5rem', maxWidth: '400px', margin: '0 auto 2.5rem' }}>
-            Tu solicitud ha sido procesada. Revisa tu correo electrónico para activar tu cuenta de élite.
+            Tu perfil ha sido creado con éxito. Ya puedes iniciar sesión y empezar a pronosticar.
           </p>
           <Link href="/login" className="btn btn-premium btn-sweep" style={{ padding: '1rem 3rem', borderRadius: '12px' }}>
-            Ir al Portal de Acceso
+            Iniciar Sesión
           </Link>
         </div>
       </div>
