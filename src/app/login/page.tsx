@@ -168,13 +168,26 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="auth-footer" style={{ marginTop: '2.5rem', textAlign: 'left' }}>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>
-                ¿Aún no tienes acceso? <br/>
-                <Link href="/registro" style={{ color: 'var(--color-gold)', fontWeight: 700, textDecoration: 'none', fontSize: '1rem' }}>
-                  Contacta con el administrador →
-                </Link>
+            <div className="auth-footer" style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                ¿Aún no tienes cuenta?
               </p>
+              <Link 
+                href="/registro" 
+                className="btn btn-secondary" 
+                style={{ 
+                  width: '100%', 
+                  justifyContent: 'center', 
+                  height: '3.5rem', 
+                  borderRadius: '12px', 
+                  fontSize: '1rem', 
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                Registrarse →
+              </Link>
             </div>
           </div>
         </div>
