@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { calculateMatchPoints } from '@/lib/points-engine';
 import { calculateOfficialStandings, getR32Pairings } from '@/lib/tournament-logic';
 import { getFlagUrl } from '@/lib/utils/flags';
+import { playerDatabase } from '@/lib/constants/players';
 
 interface Team {
   id: number;
@@ -19,10 +20,10 @@ interface Match {
   match_number: number;
   stage: string;
   group_letter: string;
-  team_a_id: number;
-  team_b_id: number;
-  team_a: Team;
-  team_b: Team;
+  team_a_id: number | null;
+  team_b_id: number | null;
+  team_a: Team | null;
+  team_b: Team | null;
   match_datetime: string;
   venue: string;
   is_bonus?: boolean;
@@ -45,7 +46,15 @@ export default function AdminPage() {
   const [filter, setFilter] = useState('');
   const [stageFilter, setStageFilter] = useState('all');
   const [teams, setTeams] = useState<Team[]>([]);
+  const [topScorer, setTopScorer] = useState('');
+  const [selectedPlayerTeam, setSelectedPlayerTeam] = useState<number | null>(null);
+  const [savingConfig, setSavingConfig] = useState(false);
   const router = useRouter();
+
+  const playerOptions = useMemo(() => {
+    const selectedTeam = teams.find(t => t.id === selectedPlayerTeam);
+    return playerDatabase[selectedTeam?.code || ''] || playerDatabase.default;
+  }, [selectedPlayerTeam, teams]);
 
   const handleFlagError = (e: any) => {
     e.target.style.display = 'none';
@@ -73,10 +82,11 @@ export default function AdminPage() {
       }
       setIsAdmin(true);
 
-      const [mRes, rRes, tRes] = await Promise.all([
+      const [mRes, rRes, tRes, cRes] = await Promise.all([
         supabase.from('matches').select('*, team_a:team_a_id(*), team_b:team_b_id(*)').order('match_number'),
         supabase.from('results').select('*'),
-        supabase.from('teams').select('*')
+        supabase.from('teams').select('*'),
+        supabase.from('tournament_config').select('*')
       ]);
 
       if (mRes.data) setMatches(mRes.data);
@@ -87,6 +97,20 @@ export default function AdminPage() {
         resMap[r.match_id] = r;
       });
       setResults(resMap);
+
+      if (cRes.data) {
+        const scorer = cRes.data.find(c => c.key === 'top_scorer')?.value;
+        if (scorer) {
+          setTopScorer(scorer);
+          const foundTeamCode = Object.keys(playerDatabase).find(code => 
+            playerDatabase[code].includes(scorer)
+          );
+          if (foundTeamCode && tRes.data) {
+            const team = tRes.data.find(t => t.code === foundTeamCode);
+            if (team) setSelectedPlayerTeam(team.id);
+          }
+        }
+      }
       
       setLoading(false);
     };
@@ -177,6 +201,21 @@ export default function AdminPage() {
     const matchNum = match.match_number;
     const supabase = createClient();
 
+    // Caso Final (guardar campeón y subcampeón oficiales)
+    if (matchNum === 104) {
+      const runnerUpId = winnerId === match.team_a_id ? match.team_b_id : match.team_a_id;
+      const { error } = await supabase.from('tournament_config').upsert([
+        { key: 'champion_id', value: winnerId.toString() },
+        { key: 'runner_up_id', value: runnerUpId ? runnerUpId.toString() : '' }
+      ]);
+      if (error) {
+        showToast('Error al guardar campeón/subcampeón: ' + error.message, 'error');
+      } else {
+        showToast('Campeón y Subcampeón guardados automáticamente');
+      }
+      return;
+    }
+
     // Definición de propagación (Basada en los cruces oficiales proporcionados)
     const KO_MAP: Record<number, any> = {
       // R32 -> R16
@@ -252,6 +291,12 @@ export default function AdminPage() {
       // 2. Limpiar propagación si es eliminatoria
       const match = matches.find(m => m.id === matchId);
       if (match && match.stage !== 'group') {
+        if (match.match_number === 104) {
+          await supabase.from('tournament_config').upsert([
+            { key: 'champion_id', value: '' },
+            { key: 'runner_up_id', value: '' }
+          ]);
+        }
         const KO_MAP: Record<number, any> = {
           73: { next: 90, pos: 'A' }, 75: { next: 90, pos: 'B' },
           74: { next: 89, pos: 'A' }, 77: { next: 89, pos: 'B' },
@@ -465,6 +510,48 @@ export default function AdminPage() {
     }
   };
 
+  const handleUpdateMatchTeams = async (matchId: number, teamAId: number | null, teamBId: number | null) => {
+    const supabase = createClient();
+    try {
+      const { error } = await supabase.from('matches').update({
+        team_a_id: teamAId,
+        team_b_id: teamBId
+      }).eq('id', matchId);
+
+      if (error) throw error;
+
+      setMatches(prev => prev.map(m => m.id === matchId ? {
+        ...m,
+        team_a_id: teamAId,
+        team_b_id: teamBId,
+        team_a: teams.find(t => t.id === teamAId) || null,
+        team_b: teams.find(t => t.id === teamBId) || null
+      } : m));
+
+      showToast('Equipos del partido actualizados correctamente');
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const saveTopScorer = async () => {
+    setSavingConfig(true);
+    const supabase = createClient();
+    try {
+      const { error } = await supabase.from('tournament_config').upsert({
+        key: 'top_scorer',
+        value: topScorer || ''
+      });
+
+      if (error) throw error;
+      showToast('Bota de Oro guardada correctamente');
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
   const handleResetTournament = async () => {
     if (!confirm('🚨 ADVERTENCIA: Esto reseteará todas las puntuaciones, plenos y clasificaciones oficiales a CERO en todos los standings. Los partidos de fases eliminatorias volverán a TBD. Las predicciones de los usuarios NO SE BORRARÁN. ¿Estás seguro de continuar?')) return;
     
@@ -506,6 +593,9 @@ export default function AdminPage() {
         supabase.from('tournament_config').update({ value: '' }).eq('key', 'runner_up_id'),
         supabase.from('tournament_config').update({ value: '' }).eq('key', 'top_scorer')
       ]);
+
+      setTopScorer('');
+      setSelectedPlayerTeam(null);
 
       showToast('Competición reseteada a cero correctamente. Predicciones conservadas.');
       window.location.reload();
@@ -591,6 +681,68 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* Configuración de Bota de Oro */}
+      <div className="glass-card animate-fadeIn" style={{ padding: '2rem', marginBottom: '2rem', borderBottom: '4px solid var(--color-orange)' }}>
+        <h2 style={{ fontSize: '1.25rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          🏆 Bota de Oro / Pichichi Oficial del Torneo
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', alignItems: 'end' }}>
+          <div>
+            <label className="form-label" style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: '0.5rem', display: 'block' }}>1. Filtrar por Selección</label>
+            <select
+              className="form-input"
+              value={selectedPlayerTeam || ''}
+              onChange={e => {
+                setSelectedPlayerTeam(parseInt(e.target.value) || null);
+                setTopScorer('');
+              }}
+            >
+              <option value="">-- Selecciona un País --</option>
+              {[...teams].sort((a, b) => a.name.localeCompare(b.name)).map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="form-label" style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: '0.5rem', display: 'block' }}>2. Elegir Jugador de la Plantilla</label>
+            <select
+              className="form-input"
+              value={topScorer}
+              onChange={e => setTopScorer(e.target.value)}
+              disabled={!selectedPlayerTeam}
+            >
+              <option value="">-- Elige al Máximo Goleador --</option>
+              {[...playerOptions].sort().map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="form-label" style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: '0.5rem', display: 'block' }}>O escribir manualmente (si no está en la lista)</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Nombre del jugador..."
+              value={topScorer}
+              onChange={e => setTopScorer(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <button
+              className="btn btn-primary"
+              style={{ width: '100%', height: '48px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 20px rgba(242,140,56,0.2)' }}
+              onClick={saveTopScorer}
+              disabled={savingConfig}
+            >
+              {savingConfig ? <span className="spinner" style={{ width: 18, height: 18 }}></span> : 'Guardar Bota de Oro'}
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Filtros */}
       <div className="glass-card admin-filters">
         <div style={{ flex: 1 }}>
@@ -646,7 +798,21 @@ export default function AdminPage() {
                 {/* Team A */}
                 <div className="admin-team-a">
                   <div className="team-text">
-                    <div className="team-name">{m.team_a?.name || 'TBD'}</div>
+                    {isGroup ? (
+                      <div className="team-name">{m.team_a?.name || 'TBD'}</div>
+                    ) : (
+                      <select
+                        className="form-input text-sm"
+                        style={{ padding: '0.25rem 0.5rem', minWidth: '150px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
+                        value={m.team_a_id || ''}
+                        onChange={(e) => handleUpdateMatchTeams(m.id, parseInt(e.target.value) || null, m.team_b_id)}
+                      >
+                        <option value="">TBD</option>
+                        {[...teams].sort((a, b) => a.name.localeCompare(b.name)).map(t => (
+                          <option key={t.id} value={t.id}>{t.name} ({t.group_letter})</option>
+                        ))}
+                      </select>
+                    )}
                     <div className="team-label">LOCAL</div>
                   </div>
                   {m.team_a && <img 
@@ -719,7 +885,21 @@ export default function AdminPage() {
                     className="admin-flag"
                   />}
                   <div className="team-text">
-                    <div className="team-name">{m.team_b?.name || 'TBD'}</div>
+                    {isGroup ? (
+                      <div className="team-name">{m.team_b?.name || 'TBD'}</div>
+                    ) : (
+                      <select
+                        className="form-input text-sm"
+                        style={{ padding: '0.25rem 0.5rem', minWidth: '150px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
+                        value={m.team_b_id || ''}
+                        onChange={(e) => handleUpdateMatchTeams(m.id, m.team_a_id, parseInt(e.target.value) || null)}
+                      >
+                        <option value="">TBD</option>
+                        {[...teams].sort((a, b) => a.name.localeCompare(b.name)).map(t => (
+                          <option key={t.id} value={t.id}>{t.name} ({t.group_letter})</option>
+                        ))}
+                      </select>
+                    )}
                     <div className="team-label">VISITANTE</div>
                   </div>
                 </div>
