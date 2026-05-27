@@ -104,5 +104,40 @@ export const playerDatabase: Record<string, string[]> = {
     'Luka Modrić', 'Mateo Kovačić', 'Mario Pašalić', 'Nikola Vlašić', 'Luka Sučić', 'Martin Baturina', 'Kristijan Jakić', 'Petar Sučić', 'Nikola Moro', 'Toni Fruk',
     'Ivan Perišić', 'Andrej Kramarić', 'Ante Budimir', 'Marco Pašalić', 'Petar Musa', 'Igor Matanović'
   ],
+  MAR: [
+    'Achraf Hakimi', 'Nayef Aguerd', 'Noussair Mazraoui', 'Anass Salah-Eddine', 'Chadi Riad', 'Youssef Belammari', 'Issa Diop', 'Redouane Hahlal', 'Zakaria El Ouahdi',
+    'Sofyan Amrabat', 'Ismael Saibari', 'Neil El Aynaoui', 'Bilal El Khannouss', 'Azzedine Ounahi', 'Amine Bouaddi', 'Samir El Mourabet',
+    'Brahim Díaz', 'Chemsdine Talbi', 'Ayoub El Kaabi', 'Soufiane Rahimi', 'Abde Ezzalzouli', 'Ayoub Amaimouni', 'Yassine Gessime'
+  ],
+  USA: [
+    'Chris Richards', 'Tim Ream', 'Mark McKenzie', 'Auston Trusty', 'Miles Robinson', 'Antonee Robinson', 'Sergiño Dest', 'Alex Freeman', 'Joe Scally', 'Max Arfsten',
+    'Tyler Adams', 'Weston McKennie', 'Cristian Roldan', 'Sebastian Berhalter', 'Christian Pulisic', 'Timothy Weah', 'Malik Tillman', 'Giovanni Reyna', 'Brenden Aaronson', 'Alejandro Zendejas',
+    'Folarin Balogun', 'Ricardo Pepi', 'Haji Wright'
+  ],
+  ESP: [
+    'Marc Cucurella', 'Alejandro Grimaldo', 'Pau Cubarsí', 'Aymeric Laporte', 'Eric García', 'Marc Pubill', 'Marcos Llorente', 'Pedro Porro',
+    'Mikel Merino', 'Pedri', 'Fabián Ruiz', 'Martin Zubimendi', 'Gavi', 'Rodri', 'Álex Baena',
+    'Mikel Oyarzabal', 'Dani Olmo', 'Nico Williams', 'Yeremy Pino', 'Ferran Torres', 'Borja Iglesias', 'Víctor Muñoz', 'Lamine Yamal'
+  ],
+  NOR: [
+    'Julian Ryerson', 'Marcus Holmgren Pedersen', 'David Moller Wolfe', 'Fredrik Bjorkan', 'Kristoffer Ajer', 'Torbjorn Heggem', 'Leon Skiri Ostigard', 'Sondre Langas', 'Henrik Falchener',
+    'Martin Odegaard', 'Sander Berge', 'Fredrik Aursnes', 'Patrick Berg', 'Kristian Thorstvedt', 'Morten Thorsby', 'Thelo Aasgaard',
+    'Erling Haaland', 'Alexander Sorloth', 'Jorgen Strand Larsen', 'Antonio Nusa', 'Oscar Bobb', 'Andreas Schjelderup', 'Jens Petter Hauge'
+  ],
+  COL: [
+    'Daniel Muñoz', 'Santiago Arias', 'Yerry Mina', 'Davinson Sánchez', 'Jhon Lucumí', 'Willer Ditta', 'Yohan Mojica', 'Déiver Machado',
+    'Richard Ríos', 'Jefferson Lerma', 'Gustavo Puerta', 'Kevin Castaño', 'Jhon Arias', 'James Rodríguez', 'Juan Fernando Quintero', 'Jorge Carrascal', 'Juan Camilo Portilla',
+    'Luis Díaz', 'Luis Suárez', 'Carlos Gómez', 'Jaminton Campaz', 'Jhon Córdoba', 'Juan Camilo Hernández'
+  ],
+  ENG: [
+    'Dan Burn', 'Marc Guéhi', 'Reece James', 'Ezri Konsa', 'Tino Livramento', 'Nico O\'Reilly', 'Jarell Quansah', 'Djed Spence', 'John Stones',
+    'Elliot Anderson', 'Jude Bellingham', 'Eberechi Eze', 'Jordan Henderson', 'Kobbie Mainoo', 'Declan Rice', 'Morgan Rogers',
+    'Bukayo Saka', 'Marcus Rashford', 'Anthony Gordon', 'Harry Kane', 'Noni Madueke', 'Ivan Toney', 'Ollie Watkins'
+  ],
+  PAN: [
+    'César Blackman', 'Jorge Gutiérrez', 'Amir Murillo', 'Fidel Escobar', 'Andrés Andrade', 'Edgardo Fariña', 'José Córdoba', 'Eric Davis', 'Jiovany Ramos', 'Roderick Miller',
+    'Aníbal Godoy', 'Adalberto Carrasquilla', 'Carlos Harvey', 'Cristian Martínez', 'José Luis Rodríguez', 'César Yanis', 'Yoel Bárcenas', 'Alberto Quintero', 'Azarías Londoño',
+    'Ismael Díaz', 'Cecilio Waterman', 'José Fajardo', 'Tomás Rodríguez'
+  ],
   default: ['PENDIENTE CONVOCATORIA']
 };
